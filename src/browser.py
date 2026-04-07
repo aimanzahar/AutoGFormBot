@@ -50,6 +50,17 @@ _SIGN_IN_INDICATORS = (
     "ServiceLogin",
     "signin/identifier",
 )
+_SIGN_IN_MODAL_MARKERS = (
+    'role="dialog"',
+    "sign in to continue",
+    "to fill out this form, you must be signed in.",
+)
+_SIGN_IN_REQUIRED_MESSAGE = (
+    "This Google Form requires a signed-in Google account.\n"
+    "AutoGFormBot can't submit it from an anonymous browser session.\n"
+    "Run the bot with CHROME_USER_DATA_DIR and CHROME_PROFILE pointing to "
+    "an authenticated Chrome profile first."
+)
 
 
 class SignInRequiredError(WebDriverException):
@@ -109,6 +120,7 @@ class Browser(object):
         self._BROWSER = None
         self._USER_DATA_DIR = os.environ.get("CHROME_USER_DATA_DIR")
         self._PROFILE_DIR = os.environ.get("CHROME_PROFILE", "Default")
+        self._SIGN_IN_REQUIRED = False
 
         # Instantiate browser
         self._set_browser()
@@ -222,6 +234,32 @@ class Browser(object):
             _logger.warning("Browser trying to get browser that has not been initialised")
         return self._BROWSER
 
+    def requires_sign_in(self) -> bool:
+        """Checks whether the current form is blocked behind Google sign-in."""
+
+        return self._SIGN_IN_REQUIRED
+
+    def get_sign_in_message(self) -> Optional[str]:
+        """Gets the sign-in guidance message, if the form is blocked."""
+
+        if self._SIGN_IN_REQUIRED:
+            return _SIGN_IN_REQUIRED_MESSAGE
+        return None
+
+    def refresh_sign_in_status(self) -> bool:
+        """Re-checks whether the current form is blocked behind Google sign-in."""
+
+        if self._SIGN_IN_REQUIRED:
+            return True
+        if not self._BROWSER:
+            return False
+
+        try:
+            self._check_sign_in()
+        except SignInRequiredError:
+            return True
+        return False
+
     def close_browser(self) -> None:
         """Closes any open browser for clean exit."""
         if self.get_browser():
@@ -278,19 +316,18 @@ class Browser(object):
         """
 
         current_url = self._BROWSER.current_url
-        if any(indicator in current_url for indicator in _SIGN_IN_INDICATORS):
+        page_source = getattr(self._BROWSER, "page_source", "") or ""
+        lowered_page_source = page_source.lower()
+        sign_in_modal_present = all(marker in lowered_page_source for marker in _SIGN_IN_MODAL_MARKERS)
+        if any(indicator in current_url for indicator in _SIGN_IN_INDICATORS) or sign_in_modal_present:
+            self._SIGN_IN_REQUIRED = True
             _logger.error(
                 "Form requires Google sign-in. Current URL: %s. "
                 "Set CHROME_USER_DATA_DIR and CHROME_PROFILE environment variables "
                 "to use an authenticated Chrome profile.",
                 current_url
             )
-            raise SignInRequiredError(
-                "This Google Form requires sign-in. "
-                "Set CHROME_USER_DATA_DIR to a Chrome profile directory that is "
-                "already logged in to a Google account. "
-                "Example: CHROME_USER_DATA_DIR=C:/Users/You/AppData/Local/Google/Chrome/User Data"
-            )
+            raise SignInRequiredError(_SIGN_IN_REQUIRED_MESSAGE)
 
     def retry_browser(self) -> bool:
         """Instantiates a new browser should the current one run into an error.

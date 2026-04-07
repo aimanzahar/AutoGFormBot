@@ -26,6 +26,7 @@ class _FakeWebDriver:
         self.visited = None
         self.implicit_wait = None
         self.current_url = "https://docs.google.com/forms/d/e/test/viewform"
+        self.page_source = ""
 
     def get(self, link: str) -> None:
         self.visited = link
@@ -92,6 +93,23 @@ class BrowserTests(unittest.TestCase):
 
         # Browser should be None since sign-in error causes monitor_browser to retry
         # and eventually give up (max_retries reached)
+
+    def test_refresh_sign_in_status_detects_in_page_sign_in_modal(self) -> None:
+        fake_driver = _FakeWebDriver()
+        fake_driver.page_source = """
+        <div role="dialog">
+            <div>Sign in to continue</div>
+            <div>To fill out this form, you must be signed in.</div>
+        </div>
+        """
+
+        instance = browser.Browser.__new__(browser.Browser)
+        instance._BROWSER = fake_driver
+        instance._SIGN_IN_REQUIRED = False
+
+        self.assertTrue(instance.refresh_sign_in_status())
+        self.assertTrue(instance.requires_sign_in())
+        self.assertIn("signed-in Google account", instance.get_sign_in_message())
 
 
 if __name__ == "__main__":

@@ -426,6 +426,10 @@ class FormProcessor(object):
                  and False if an error was encountered during _get_next_section or refresh_section.
         """
 
+        if self._BROWSER.refresh_sign_in_status():
+            _logger.error("FormProcessor cannot obtain questions because the form requires Google sign-in")
+            return False
+
         def _try_next_section() -> Union[bool, WebElement]:
             """Helper function to obtain the next question of the next section of the Google Form.
 
@@ -473,6 +477,10 @@ class FormProcessor(object):
         :return: True if the submission was performed successfully, False otherwise.
                  Returns None if a sanity check failed or an exception was caught.
         """
+
+        if self._BROWSER.refresh_sign_in_status():
+            _logger.error("FormProcessor cannot answer questions because the form requires Google sign-in")
+            return False
 
         # Sanity check for current question
         if not self._CURRENT:

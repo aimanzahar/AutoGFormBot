@@ -1540,7 +1540,11 @@ def _obtain_question(update: Update, context: CallbackContext, *, to_process: Op
         elif question is False or not isinstance(question, BaseQuestion):
             # Some error occurred
             _logger.error("_obtain_question error occurred while trying to obtain the next question")
-            utils.send_bug_message(update.callback_query.message)
+            issue = processor.get_browser().get_sign_in_message()
+            if issue:
+                utils.send_bug_message(update.callback_query.message, issue)
+            else:
+                utils.send_bug_message(update.callback_query.message)
             return _STOPPING
 
         # Process the question
@@ -1556,7 +1560,11 @@ def _obtain_question(update: Update, context: CallbackContext, *, to_process: Op
             result = question.get_info()
         if not result:
             _logger.error("_obtain_question error occurred while trying to obtain the question information")
-            utils.send_bug_message(update.callback_query.message)
+            issue = processor.get_browser().get_sign_in_message()
+            if issue:
+                utils.send_bug_message(update.callback_query.message, issue)
+            else:
+                utils.send_bug_message(update.callback_query.message)
             return _STOPPING
 
     # Retrieve question instance if it has been stored previously
@@ -1805,6 +1813,11 @@ def _submit_answer(update: Update, context: CallbackContext) -> str:
                                                  str(context.user_data.get(_CURRENT_ANSWER)))
             if not result:
                 _logger.error("_submit_answer failed to submit answer to Google forms, please debug")
+                issue = context.user_data.get(_PROCESSOR).get_browser().get_sign_in_message()
+                if issue:
+                    utils.send_bug_message(update.callback_query.message, issue)
+                else:
+                    utils.send_bug_message(update.callback_query.message)
                 return _STOPPING
     else:
         if isinstance(context.user_data.get(_CURRENT_ANSWER), OrderedDict):
