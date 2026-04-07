@@ -9,3 +9,4 @@
 **/venv
 .env
 browser-bin/
+/chrome-profile-bot
