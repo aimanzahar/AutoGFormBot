@@ -1542,7 +1542,7 @@ def _obtain_question(update: Update, context: CallbackContext, *, to_process: Op
             _logger.error("_obtain_question error occurred while trying to obtain the next question")
             issue = processor.get_browser().get_sign_in_message()
             if issue:
-                utils.send_bug_message(update.callback_query.message, issue)
+                utils.send_issue_message(update.callback_query.message, issue)
             else:
                 utils.send_bug_message(update.callback_query.message)
             return _STOPPING
@@ -1562,7 +1562,7 @@ def _obtain_question(update: Update, context: CallbackContext, *, to_process: Op
             _logger.error("_obtain_question error occurred while trying to obtain the question information")
             issue = processor.get_browser().get_sign_in_message()
             if issue:
-                utils.send_bug_message(update.callback_query.message, issue)
+                utils.send_issue_message(update.callback_query.message, issue)
             else:
                 utils.send_bug_message(update.callback_query.message)
             return _STOPPING
@@ -1815,7 +1815,7 @@ def _submit_answer(update: Update, context: CallbackContext) -> str:
                 _logger.error("_submit_answer failed to submit answer to Google forms, please debug")
                 issue = context.user_data.get(_PROCESSOR).get_browser().get_sign_in_message()
                 if issue:
-                    utils.send_bug_message(update.callback_query.message, issue)
+                    utils.send_issue_message(update.callback_query.message, issue)
                 else:
                     utils.send_bug_message(update.callback_query.message)
                 return _STOPPING

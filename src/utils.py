@@ -89,6 +89,17 @@ def send_bug_message(message: Message, bug: Optional[str] = "") -> None:
     )
 
 
+def send_issue_message(message: Message, issue: str) -> None:
+    """Sends a user-facing issue message without framing it as a bot bug."""
+
+    message.reply_text(
+        text_to_markdownv2(issue),
+        parse_mode=ParseMode.MARKDOWN_V2,
+        disable_web_page_preview=True,
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+
 def send_potential_feature_message(message: Message, feature: Optional[str] = ""):
     """Helper function to send a message for potential unimplemented features.
 
