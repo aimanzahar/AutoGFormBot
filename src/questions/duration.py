@@ -12,6 +12,7 @@ Usage:
 from browser import Browser
 import logging
 from questions import BaseQuestion
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from typing import Optional, Tuple
 
@@ -110,14 +111,14 @@ class DurationQuestion(BaseQuestion):
 
         self.set_answer_elements(
             # Obtain the hour element
-            self._QUESTION_ELEMENT.find_element_by_xpath(
-                ".//input[@aria-label='{}']".format(self._DURATION_HOUR_ARIA_LABEL)),
+            self._QUESTION_ELEMENT.find_element(
+                By.XPATH, ".//input[@aria-label='{}']".format(self._DURATION_HOUR_ARIA_LABEL)),
             # Obtain the minute element
-            self._QUESTION_ELEMENT.find_element_by_xpath(
-                ".//input[@aria-label='{}']".format(self._DURATION_MINUTE_ARIA_LABEL)),
+            self._QUESTION_ELEMENT.find_element(
+                By.XPATH, ".//input[@aria-label='{}']".format(self._DURATION_MINUTE_ARIA_LABEL)),
             # Obtain the second element
-            self._QUESTION_ELEMENT.find_element_by_xpath(
-                ".//input[@aria-label='{}']".format(self._DURATION_SECOND_ARIA_LABEL))
+            self._QUESTION_ELEMENT.find_element(
+                By.XPATH, ".//input[@aria-label='{}']".format(self._DURATION_SECOND_ARIA_LABEL))
         )
         return True
 

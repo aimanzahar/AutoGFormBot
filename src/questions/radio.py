@@ -16,6 +16,8 @@ Usage:
 from browser import Browser
 import logging
 from questions import BaseOptionQuestion, BaseOptionGridQuestion
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from typing import Optional, Tuple
 
@@ -43,9 +45,9 @@ class RadioQuestion(BaseOptionQuestion):
         _OTHER_OPTION_LABEL     The text to replace the blank aria label for any specified 'Other' options.
     """
 
-    # Define constants
-    _RADIO_CLASS_NAME = "appsMaterialWizToggleRadiogroupEl"  # Radio buttons
-    _OTHER_CLASS_NAME = "quantumWizTextinputSimpleinputInput"  # 'Other' Input Field
+    # Define constants — use both legacy class names and modern ARIA role selectors
+    _RADIO_CLASS_NAME = "appsMaterialWizToggleRadiogroupEl"  # Radio buttons (legacy)
+    _OTHER_CLASS_NAME = "quantumWizTextinputSimpleinputInput"  # 'Other' Input Field (legacy)
     _OTHER_OPTION_DATA_VALUE = "__other_option__"
 
     # region Getters and Setters
@@ -96,9 +98,17 @@ class RadioQuestion(BaseOptionQuestion):
             return result
 
         # Obtain options and their corresponding elements
-        container = self._QUESTION_ELEMENT.find_element_by_class_name(BaseOptionGridQuestion.get_container_class()) \
-            if isinstance(self, BaseOptionGridQuestion) else self._QUESTION_ELEMENT
-        elements = container.find_elements_by_class_name(self._RADIO_CLASS_NAME)
+        if isinstance(self, BaseOptionGridQuestion):
+            try:
+                container = self._QUESTION_ELEMENT.find_element(By.CLASS_NAME, BaseOptionGridQuestion.get_container_class())
+            except NoSuchElementException:
+                container = self._QUESTION_ELEMENT.find_element(By.CSS_SELECTOR, BaseOptionGridQuestion._CONTAINER_FALLBACK_CSS)
+        else:
+            container = self._QUESTION_ELEMENT
+        elements = container.find_elements(By.CLASS_NAME, self._RADIO_CLASS_NAME)
+        if not elements:
+            # Modern Forms: use role="radio"
+            elements = container.find_elements(By.CSS_SELECTOR, "[role='radio']")
         option_elements, options = [], []
         for element in elements:
             option = element.get_attribute("aria-label")
@@ -116,8 +126,13 @@ class RadioQuestion(BaseOptionQuestion):
                         _logger.warning("%s get_info found duplicate 'Other' option", self.__class__.__name__)
                         continue
                     option_elements.append(element)  # Radio button associated with the 'Other' option
-                    self.set_other_option_element(self._QUESTION_ELEMENT.find_element_by_class_name(
-                        self._OTHER_CLASS_NAME))  # Input field associated with the 'Other' option
+                    try:
+                        self.set_other_option_element(self._QUESTION_ELEMENT.find_element(
+                            By.CLASS_NAME, self._OTHER_CLASS_NAME))  # Input field associated with the 'Other' option
+                    except NoSuchElementException:
+                        # Modern Forms: find input with aria-label 'Other response'
+                        self.set_other_option_element(self._QUESTION_ELEMENT.find_element(
+                            By.CSS_SELECTOR, "input[aria-label='Other response']"))
 
                 # Blank option detected
                 else:

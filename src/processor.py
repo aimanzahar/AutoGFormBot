@@ -17,6 +17,7 @@ This script uses custom classes as representations of Google Form questions unde
 from collections import deque
 import logging
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 import time
 from typing import Optional, Sequence, Tuple, Union
@@ -188,12 +189,12 @@ class FormProcessor(object):
         # region Date and time questions, check for composite date-time questions
 
         result = None
-        if question.find_elements_by_xpath(".//div[@data-supportsdate='true']"):
+        if question.find_elements(By.XPATH, ".//div[@data-supportsdate='true']"):
             result = DateQuestion(question, self._BROWSER)
-        if question.find_elements_by_xpath(
-                ".//input[@aria-label='{}']".format(TimeQuestion.get_hour_label())) and \
-                question.find_elements_by_xpath(
-                    ".//input[@aria-label='{}']".format(TimeQuestion.get_minute_label())):
+        if question.find_elements(
+                By.XPATH, ".//input[@aria-label='{}']".format(TimeQuestion.get_hour_label())) and \
+                question.find_elements(
+                    By.XPATH, ".//input[@aria-label='{}']".format(TimeQuestion.get_minute_label())):
             time_question = TimeQuestion(question, self._BROWSER)
             result = DatetimeQuestion(result, time_question) if result else time_question
         if result:
@@ -203,17 +204,21 @@ class FormProcessor(object):
 
         # region Drop-down questions
 
-        if question.find_elements_by_class_name(DropdownQuestion.get_class_name()):
+        if question.find_elements(By.CLASS_NAME, DropdownQuestion.get_class_name()) or \
+                question.find_elements(By.CSS_SELECTOR, "[role='listbox']"):
             return DropdownQuestion(question, self._BROWSER)
 
         # endregion Drop-down questions
 
         # region Checkbox questions
 
-        elif question.find_elements_by_class_name(CheckboxQuestion.get_class_name()):
+        checkbox_elements = question.find_elements(By.CLASS_NAME, CheckboxQuestion.get_class_name())
+        if not checkbox_elements:
+            checkbox_elements = question.find_elements(By.CSS_SELECTOR, "[role='checkbox']")
+        if checkbox_elements:
             options = list(filter(lambda label: label,
                                   map(lambda element: element.get_attribute("aria-label"),
-                                      question.find_elements_by_class_name(CheckboxQuestion.get_class_name()))))
+                                      checkbox_elements)))
             if BaseOptionGridQuestion.is_grid_option(*options):
                 return CheckboxGridQuestion(question, self._BROWSER)
             else:
@@ -223,10 +228,13 @@ class FormProcessor(object):
 
         # region Radio button questions
 
-        elif question.find_elements_by_class_name(RadioQuestion.get_class_name()):
+        radio_elements = question.find_elements(By.CLASS_NAME, RadioQuestion.get_class_name())
+        if not radio_elements:
+            radio_elements = question.find_elements(By.CSS_SELECTOR, "[role='radio']")
+        if radio_elements:
             options = list(filter(lambda label: label,
                                   map(lambda element: element.get_attribute("aria-label"),
-                                      question.find_elements_by_class_name(RadioQuestion.get_class_name()))))
+                                      radio_elements)))
             if BaseOptionGridQuestion.is_grid_option(*options):
                 return RadioGridQuestion(question, self._BROWSER)
             else:
@@ -236,26 +244,28 @@ class FormProcessor(object):
 
         # region Paragraph questions
 
-        elif question.find_elements_by_class_name(LAQuestion.get_class_name()):
+        if question.find_elements(By.CLASS_NAME, LAQuestion.get_class_name()) or \
+                question.find_elements(By.CSS_SELECTOR, "textarea"):
             return LAQuestion(question, self._BROWSER)
 
         # endregion Paragraph questions
 
         # region Duration questions
 
-        elif question.find_elements_by_xpath(
-                ".//input[@aria-label='{}']".format(DurationQuestion.get_hour_label())) and \
-                question.find_elements_by_xpath(
-                    ".//input[@aria-label='{}']".format(DurationQuestion.get_minute_label())) and \
-                question.find_elements_by_xpath(
-                    ".//input[@aria-label='{}']".format(DurationQuestion.get_second_label())):
+        elif question.find_elements(
+                By.XPATH, ".//input[@aria-label='{}']".format(DurationQuestion.get_hour_label())) and \
+                question.find_elements(
+                    By.XPATH, ".//input[@aria-label='{}']".format(DurationQuestion.get_minute_label())) and \
+                question.find_elements(
+                    By.XPATH, ".//input[@aria-label='{}']".format(DurationQuestion.get_second_label())):
             return DurationQuestion(question, self._BROWSER)
 
         # endregion Duration questions
 
         # region Textbox questions
 
-        elif question.find_elements_by_class_name(SAQuestion.get_class_name()):
+        elif question.find_elements(By.CLASS_NAME, SAQuestion.get_class_name()) or \
+                question.find_elements(By.CSS_SELECTOR, "input[type='text'][aria-label]"):
             return SAQuestion(question, self._BROWSER)
 
         # endregion Textbox questions
@@ -307,21 +317,36 @@ class FormProcessor(object):
                                       or an exception was caught in Browser.monitor_browser.
         """
 
-        # Define constants for web scraping
-        submit_button_class_name = "appsMaterialWizButtonPaperbuttonLabel"
-        question_class_name = "freebirdFormviewerComponentsQuestionBaseRoot"
+        # Define constants for web scraping — try multiple selectors for resilience
+        _BUTTON_XPATHS_NEXT = [
+            "//span[contains(@class, 'appsMaterialWizButtonPaperbuttonLabel')][contains(., 'Next')]",
+            "//div[@role='button']//span[contains(text(), 'Next')]",
+            "//*[@role='button'][contains(., 'Next')]",
+        ]
+        _BUTTON_XPATHS_SUBMIT = [
+            "//span[contains(@class, 'appsMaterialWizButtonPaperbuttonLabel')][contains(., 'Submit')]",
+            "//div[@role='button']//span[contains(text(), 'Submit')]",
+            "//*[@role='button'][contains(., 'Submit')]",
+        ]
+        _QUESTION_SELECTORS = [
+            (By.CLASS_NAME, "freebirdFormviewerComponentsQuestionBaseRoot"),
+            (By.CSS_SELECTOR, "div[role='listitem']"),
+            (By.CSS_SELECTOR, "div[data-params]"),
+        ]
 
         button, to_submit, questions = None, False, []
 
         # region Try obtaining the 'Next' button
 
-        try:
-            next_button = self._BROWSER.get_browser().find_element_by_xpath(
-                "//span[contains(@class, '{}')]"
-                "[contains(., 'Next')]".format(submit_button_class_name))
-            button = next_button
-        except NoSuchElementException:
-            # If there is no 'Next' button, hopefully there is a 'Submit' button
+        for xpath in _BUTTON_XPATHS_NEXT:
+            try:
+                next_button = self._BROWSER.get_browser().find_element(By.XPATH, xpath)
+                button = next_button
+                break
+            except NoSuchElementException:
+                continue
+
+        if not button:
             _logger.info("FormProcessor 'Next' button element could not be found, maybe 'Submit' button found instead")
 
         # endregion Try obtaining the 'Next' button
@@ -329,16 +354,22 @@ class FormProcessor(object):
         # region Try obtaining the 'Submit' button
 
         if not button:
-            try:
-                submit_button = self._BROWSER.get_browser().find_element_by_xpath(
-                    "//span[contains(@class, '{}')]"
-                    "[contains(., 'Submit')]".format(submit_button_class_name))
-                button = submit_button
-                to_submit = True
-            except NoSuchElementException:
+            for xpath in _BUTTON_XPATHS_SUBMIT:
+                try:
+                    submit_button = self._BROWSER.get_browser().find_element(By.XPATH, xpath)
+                    button = submit_button
+                    to_submit = True
+                    break
+                except NoSuchElementException:
+                    continue
+
+            if not button:
                 # Neither 'Next' nor 'Submit' buttons were found, flag as an error
                 _logger.error("FormProcessor 'Submit' button element could not be found also")
-                raise NoSuchElementException
+                page_url = self._BROWSER.get_browser().current_url
+                _logger.error("Current page URL: %s", page_url)
+                raise NoSuchElementException(
+                    "Neither 'Next' nor 'Submit' button found. Current URL: {}".format(page_url))
 
         # endregion Try obtaining the 'Submit' button
 
@@ -349,10 +380,15 @@ class FormProcessor(object):
                          "Submit" if to_submit else "Next")
 
         # Handle scraping of next section
-        if not to_submit:
+        # Only skip scraping when we actually clicked Submit (form is done)
+        if not (to_submit and to_click):
             _logger.info("FormProcessor is scraping the next section of the Google Form")
             time.sleep(2)  # Allow browser to finish loading the page, in case
-            questions = self._BROWSER.get_browser().find_elements_by_class_name(question_class_name)
+            questions = []
+            for by, selector in _QUESTION_SELECTORS:
+                questions = self._BROWSER.get_browser().find_elements(by, selector)
+                if questions:
+                    break
 
         return questions
 

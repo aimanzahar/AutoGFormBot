@@ -8,3 +8,4 @@
 # Environment stuff
 **/venv
 .env
+browser-bin/

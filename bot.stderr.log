@@ -1,0 +1,256 @@
+F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\conversationhandler.py:287: UserWarning: If 'per_message=False', 'CallbackQueryHandler' will not be tracked for every message.
+  warnings.warn(
+2026-04-06 22:04:18,003 - __main__ - INFO - The bot has been successfully deployed!
+2026-04-06 22:04:18,004 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-06 22:04:23,207 - telegram.ext.updater - ERROR - Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:04:23,213 - __main__ - ERROR - Exception while handling an update:
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 646, in _network_loop_retry
+    if not action_cb():
+           ^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 597, in polling_action_cb
+    updates = self.bot.get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\extbot.py", line 222, in get_updates
+    updates = super().get_updates(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 130, in decorator
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 2861, in get_updates
+    self._post(
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 295, in _post
+    return self.request.post(
+           ^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 356, in post
+    result = self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 283, in _request_wrapper
+    raise Conflict(message)
+telegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:04:23,607 - telegram.ext.dispatcher - ERROR - An uncaught error was raised while handling the error.
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 536, in process_update
+    self.dispatch_error(None, update)
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 810, in dispatch_error
+    callback(update, context)
+  File "F:\Projek Coding\AutoGFormBot\src\handler.py", line 2120, in _error_handler
+    if update.message or update.callback_query.message:
+       ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'message'
+2026-04-06 22:04:29,064 - telegram.ext.updater - ERROR - Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:04:29,070 - __main__ - ERROR - Exception while handling an update:
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 646, in _network_loop_retry
+    if not action_cb():
+           ^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 597, in polling_action_cb
+    updates = self.bot.get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\extbot.py", line 222, in get_updates
+    updates = super().get_updates(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 130, in decorator
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 2861, in get_updates
+    self._post(
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 295, in _post
+    return self.request.post(
+           ^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 356, in post
+    result = self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 283, in _request_wrapper
+    raise Conflict(message)
+telegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:04:29,476 - telegram.ext.dispatcher - ERROR - An uncaught error was raised while handling the error.
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 536, in process_update
+    self.dispatch_error(None, update)
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 810, in dispatch_error
+    callback(update, context)
+  File "F:\Projek Coding\AutoGFormBot\src\handler.py", line 2120, in _error_handler
+    if update.message or update.callback_query.message:
+       ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'message'
+2026-04-06 22:04:36,171 - telegram.ext.updater - ERROR - Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:04:36,176 - __main__ - ERROR - Exception while handling an update:
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 646, in _network_loop_retry
+    if not action_cb():
+           ^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 597, in polling_action_cb
+    updates = self.bot.get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\extbot.py", line 222, in get_updates
+    updates = super().get_updates(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 130, in decorator
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 2861, in get_updates
+    self._post(
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 295, in _post
+    return self.request.post(
+           ^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 356, in post
+    result = self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 283, in _request_wrapper
+    raise Conflict(message)
+telegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:04:36,592 - telegram.ext.dispatcher - ERROR - An uncaught error was raised while handling the error.
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 536, in process_update
+    self.dispatch_error(None, update)
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 810, in dispatch_error
+    callback(update, context)
+  File "F:\Projek Coding\AutoGFormBot\src\handler.py", line 2120, in _error_handler
+    if update.message or update.callback_query.message:
+       ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'message'
+2026-04-06 22:04:42,151 - telegram.ext.updater - ERROR - Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:04:42,157 - __main__ - ERROR - Exception while handling an update:
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 646, in _network_loop_retry
+    if not action_cb():
+           ^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 597, in polling_action_cb
+    updates = self.bot.get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\extbot.py", line 222, in get_updates
+    updates = super().get_updates(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 130, in decorator
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 2861, in get_updates
+    self._post(
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 295, in _post
+    return self.request.post(
+           ^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 356, in post
+    result = self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 283, in _request_wrapper
+    raise Conflict(message)
+telegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:04:42,549 - telegram.ext.dispatcher - ERROR - An uncaught error was raised while handling the error.
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 536, in process_update
+    self.dispatch_error(None, update)
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 810, in dispatch_error
+    callback(update, context)
+  File "F:\Projek Coding\AutoGFormBot\src\handler.py", line 2120, in _error_handler
+    if update.message or update.callback_query.message:
+       ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'message'
+2026-04-06 22:04:50,947 - telegram.ext.updater - ERROR - Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:04:50,953 - __main__ - ERROR - Exception while handling an update:
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 646, in _network_loop_retry
+    if not action_cb():
+           ^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 597, in polling_action_cb
+    updates = self.bot.get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\extbot.py", line 222, in get_updates
+    updates = super().get_updates(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 130, in decorator
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 2861, in get_updates
+    self._post(
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 295, in _post
+    return self.request.post(
+           ^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 356, in post
+    result = self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 283, in _request_wrapper
+    raise Conflict(message)
+telegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:04:51,342 - telegram.ext.dispatcher - ERROR - An uncaught error was raised while handling the error.
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 536, in process_update
+    self.dispatch_error(None, update)
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 810, in dispatch_error
+    callback(update, context)
+  File "F:\Projek Coding\AutoGFormBot\src\handler.py", line 2120, in _error_handler
+    if update.message or update.callback_query.message:
+       ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'message'
+2026-04-06 22:05:03,959 - telegram.ext.updater - ERROR - Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:05:03,964 - __main__ - ERROR - Exception while handling an update:
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 646, in _network_loop_retry
+    if not action_cb():
+           ^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 597, in polling_action_cb
+    updates = self.bot.get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\extbot.py", line 222, in get_updates
+    updates = super().get_updates(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 130, in decorator
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 2861, in get_updates
+    self._post(
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 295, in _post
+    return self.request.post(
+           ^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 356, in post
+    result = self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 283, in _request_wrapper
+    raise Conflict(message)
+telegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:05:04,351 - telegram.ext.dispatcher - ERROR - An uncaught error was raised while handling the error.
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 536, in process_update
+    self.dispatch_error(None, update)
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 810, in dispatch_error
+    callback(update, context)
+  File "F:\Projek Coding\AutoGFormBot\src\handler.py", line 2120, in _error_handler
+    if update.message or update.callback_query.message:
+       ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'message'
+2026-04-06 22:05:23,304 - telegram.ext.updater - ERROR - Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:05:23,310 - __main__ - ERROR - Exception while handling an update:
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 646, in _network_loop_retry
+    if not action_cb():
+           ^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\updater.py", line 597, in polling_action_cb
+    updates = self.bot.get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\extbot.py", line 222, in get_updates
+    updates = super().get_updates(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 130, in decorator
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 2861, in get_updates
+    self._post(
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\bot.py", line 295, in _post
+    return self.request.post(
+           ^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 356, in post
+    result = self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\utils\request.py", line 283, in _request_wrapper
+    raise Conflict(message)
+telegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2026-04-06 22:05:23,755 - telegram.ext.dispatcher - ERROR - An uncaught error was raised while handling the error.
+Traceback (most recent call last):
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 536, in process_update
+    self.dispatch_error(None, update)
+  File "F:\Projek Coding\AutoGFormBot\venv\Lib\site-packages\telegram\ext\dispatcher.py", line 810, in dispatch_error
+    callback(update, context)
+  File "F:\Projek Coding\AutoGFormBot\src\handler.py", line 2120, in _error_handler
+    if update.message or update.callback_query.message:
+       ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'message'

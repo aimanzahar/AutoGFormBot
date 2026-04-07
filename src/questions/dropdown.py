@@ -12,6 +12,8 @@ Usage:
 from browser import Browser
 import logging
 from questions import BaseOptionQuestion
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 import time
 from typing import Optional, Tuple
@@ -41,10 +43,10 @@ class DropdownQuestion(BaseOptionQuestion):
         _OTHER_OPTION_ELEMENT   The input field for the 'Other' option, if an 'Other' option is defined.
     """
 
-    # Define constants
-    _DROPDOWN_CLASS_NAME = "quantumWizMenuPaperselectOption"  # Drop-down Options
-    _DROPDOWN_MENU_CLASS_NAME = "quantumWizMenuPaperselectPopup"  # Drop-down Menu
-    _PLACEHOLDER_CLASS_NAME = "isPlaceholder"  # Drop-down placeholder
+    # Define constants — use both legacy class names and modern ARIA role selectors
+    _DROPDOWN_CLASS_NAME = "quantumWizMenuPaperselectOption"  # Drop-down Options (legacy)
+    _DROPDOWN_MENU_CLASS_NAME = "quantumWizMenuPaperselectPopup"  # Drop-down Menu (legacy)
+    _PLACEHOLDER_CLASS_NAME = "isPlaceholder"  # Drop-down placeholder (legacy)
     _BUFFER_SECONDS = 1
 
     # region Getters and Setters
@@ -98,13 +100,22 @@ class DropdownQuestion(BaseOptionQuestion):
 
         # Display drop-down menu using placeholder element
         # There should only be one such element
-        placeholder = self._QUESTION_ELEMENT.find_element_by_class_name(self._PLACEHOLDER_CLASS_NAME)
+        try:
+            placeholder = self._QUESTION_ELEMENT.find_element(By.CLASS_NAME, self._PLACEHOLDER_CLASS_NAME)
+        except NoSuchElementException:
+            # Modern Forms: find the dropdown trigger by role or listbox
+            placeholder = self._QUESTION_ELEMENT.find_element(By.CSS_SELECTOR, "[role='listbox'], [role='combobox']")
         placeholder.click()
         time.sleep(self._BUFFER_SECONDS)
 
         # With drop-down menu displayed, crawl for options
-        menu = self._QUESTION_ELEMENT.find_element_by_class_name(self._DROPDOWN_MENU_CLASS_NAME)
-        menu_elements = menu.find_elements_by_class_name(self._DROPDOWN_CLASS_NAME)
+        try:
+            menu = self._QUESTION_ELEMENT.find_element(By.CLASS_NAME, self._DROPDOWN_MENU_CLASS_NAME)
+            menu_elements = menu.find_elements(By.CLASS_NAME, self._DROPDOWN_CLASS_NAME)
+        except NoSuchElementException:
+            # Modern Forms: find options by role="option"
+            menu = self._QUESTION_ELEMENT.find_element(By.CSS_SELECTOR, "[role='listbox']")
+            menu_elements = menu.find_elements(By.CSS_SELECTOR, "[role='option']")
         options = [element.text for element in menu_elements[1:]]
 
         # Simple sanity check, should not trigger
@@ -151,7 +162,12 @@ class DropdownQuestion(BaseOptionQuestion):
         placeholder, menu = self.get_answer_elements()
         placeholder.click()
         time.sleep(self._BUFFER_SECONDS)
-        menu_elements = menu.find_elements_by_class_name(self._DROPDOWN_CLASS_NAME)
+        try:
+            menu_elements = menu.find_elements(By.CLASS_NAME, self._DROPDOWN_CLASS_NAME)
+        except (NoSuchElementException, StaleElementReferenceException):
+            menu_elements = []
+        if not menu_elements:
+            menu_elements = menu.find_elements(By.CSS_SELECTOR, "[role='option']")
         menu_elements = list(filter(lambda element: element.text == text, menu_elements[1:]))
         assert len(menu_elements) > 0  # Since sanity check passed
         if len(menu_elements) > 1:

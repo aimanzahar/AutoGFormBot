@@ -13,12 +13,12 @@ Usage:
     To close the browser: browser.close_browser()
 """
 
-from fake_useragent import UserAgent
 from functools import wraps
 import logging
 import os
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.webdriver import WebDriver
 import time
 from typing import Any, Callable, Optional, TypeVar, cast
@@ -36,6 +36,25 @@ _F = TypeVar('_F', bound=Callable[..., Any])
 # Browser-based constants
 _NUM_MAX_RETRIES = 5
 _TIMEOUT_SECONDS = 8  # NOTE: some multiple of 8
+_DEFAULT_IMPLICIT_WAIT = 5  # seconds to wait for elements before raising
+# `fake_useragent` 0.1.x scrapes third-party sites at runtime and now fails hard.
+_DEFAULT_USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/122.0.0.0 Safari/537.36"
+)
+
+# Sign-in detection indicators
+_SIGN_IN_INDICATORS = (
+    "accounts.google.com",
+    "ServiceLogin",
+    "signin/identifier",
+)
+
+
+class SignInRequiredError(WebDriverException):
+    """Raised when the Google Form requires authentication and no user profile is provided."""
+    pass
 
 # endregion Define constants
 
@@ -62,18 +81,22 @@ class Browser(object):
         _TIMEOUT        The timeout (in seconds) before opening a new browser.
         _IMPLICIT_WAIT  The time (in seconds) to wait implicitly.
         _COUNTER        The number of browsers instantiated.
+        _USER_DATA_DIR  Optional path to Chrome user data directory for authenticated sessions.
+        _PROFILE_DIR    Optional Chrome profile directory name (e.g. 'Default', 'Profile 1').
     """
 
     # region Constructors
 
     def __init__(self, link: str, *, headless: Optional[bool] = False, max_retries: Optional[int] = _NUM_MAX_RETRIES,
-                 timeout: Optional[int] = _TIMEOUT_SECONDS, implicit_wait: Optional[int] = 0) -> None:
+                 timeout: Optional[int] = _TIMEOUT_SECONDS,
+                 implicit_wait: Optional[int] = _DEFAULT_IMPLICIT_WAIT) -> None:
         """Initialisation of the Browser class.
 
         :param link: The Google form link used by the FormProcessor.
         :param headless: Flag to indicate if the browser should run headless.
         :param max_retries: The maximum number of retries before the script is terminated.
         :param timeout: The timeout (in seconds) before opening a new browser.
+        :param implicit_wait: The time (in seconds) to wait implicitly for elements.
         """
 
         # Initialise all variables
@@ -84,6 +107,8 @@ class Browser(object):
         self._TIMEOUT = timeout
         self._IMPLICIT_WAIT = implicit_wait
         self._BROWSER = None
+        self._USER_DATA_DIR = os.environ.get("CHROME_USER_DATA_DIR")
+        self._PROFILE_DIR = os.environ.get("CHROME_PROFILE", "Default")
 
         # Instantiate browser
         self._set_browser()
@@ -148,6 +173,10 @@ class Browser(object):
                     result = function(*args, **kwargs)
                     passed = True
 
+                except SignInRequiredError:
+                    _logger.error("Form requires Google sign-in, aborting without retry")
+                    break
+
                 except WebDriverException:
                     _logger.warning("An exception while using selenium library functions has been detected")
 
@@ -205,15 +234,24 @@ class Browser(object):
 
         # Initialise ChromeOptions
         options = webdriver.ChromeOptions()
-        options.add_argument("-incognito")
+
+        # Use Chrome profile for authenticated sessions instead of incognito
+        if self._USER_DATA_DIR:
+            _logger.info("Using Chrome user data dir: %s (profile: %s)",
+                         self._USER_DATA_DIR, self._PROFILE_DIR)
+            options.add_argument("--user-data-dir={}".format(self._USER_DATA_DIR))
+            options.add_argument("--profile-directory={}".format(self._PROFILE_DIR))
+        else:
+            options.add_argument("-incognito")
+
         # options.add_argument("start-maximized")  # This works but causes bugs in form submission on Heroku
         options.add_argument("window-size=2560,1440")
         options.add_experimental_option("excludeSwitches", ['enable-automation', 'enable-logging'])
-        options.add_argument("user-agent={}".format(UserAgent().random))
+        options.add_argument("user-agent={}".format(_DEFAULT_USER_AGENT))
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
         if self._HEADLESS:
-            options.add_argument("--headless")
+            options.add_argument("--headless=new")
 
         # Comment out this section for local testing only
         options.binary_location = os.environ.get("GOOGLE_CHROME_BIN", "/app/.apt/usr/bin/google_chrome")
@@ -224,11 +262,35 @@ class Browser(object):
             _logger.warning("CHROMEDRIVER_PATH PATH variable not set!")
 
         # Initialise browser with link
-        # self._BROWSER = webdriver.Chrome(executable_path=ChromeDriverManager(print_first_line=False).install(),
-        #                                  options=options)  # Uncomment for local testing only
-        self._BROWSER = webdriver.Chrome(executable_path=executable_path, options=options)
+        service = Service(executable_path=executable_path)
+        # service = Service(ChromeDriverManager(print_first_line=False).install())  # Uncomment for local testing only
+        self._BROWSER = webdriver.Chrome(service=service, options=options)
         self._BROWSER.get(self._LINK)
         self._BROWSER.implicitly_wait(self._IMPLICIT_WAIT)
+
+        # Check if the form requires sign-in
+        self._check_sign_in()
+
+    def _check_sign_in(self) -> None:
+        """Detects if the browser landed on a Google sign-in page instead of the form.
+
+        :raises SignInRequiredError: If the form requires authentication and no profile is configured.
+        """
+
+        current_url = self._BROWSER.current_url
+        if any(indicator in current_url for indicator in _SIGN_IN_INDICATORS):
+            _logger.error(
+                "Form requires Google sign-in. Current URL: %s. "
+                "Set CHROME_USER_DATA_DIR and CHROME_PROFILE environment variables "
+                "to use an authenticated Chrome profile.",
+                current_url
+            )
+            raise SignInRequiredError(
+                "This Google Form requires sign-in. "
+                "Set CHROME_USER_DATA_DIR to a Chrome profile directory that is "
+                "already logged in to a Google account. "
+                "Example: CHROME_USER_DATA_DIR=C:/Users/You/AppData/Local/Google/Chrome/User Data"
+            )
 
     def retry_browser(self) -> bool:
         """Instantiates a new browser should the current one run into an error.

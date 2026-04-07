@@ -12,6 +12,8 @@ Usage:
 from browser import Browser
 import logging
 from questions import BaseQuestion
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from typing import Optional
 
@@ -35,8 +37,8 @@ class SAQuestion(BaseQuestion):
         _BROWSER            The selenium browser instance used to host the Google Form.
     """
 
-    # Define constants
-    _SAQ_CLASS_NAME = "quantumWizTextinputPaperinputInput"
+    # Define constants — use both legacy class name and modern selector
+    _SAQ_CLASS_NAME = "quantumWizTextinputPaperinputInput"  # Legacy
 
     # region Getters and Setters
 
@@ -83,7 +85,12 @@ class SAQuestion(BaseQuestion):
             return result
 
         # Obtain the answer element
-        self.set_answer_elements(self._QUESTION_ELEMENT.find_element_by_class_name(self._SAQ_CLASS_NAME))
+        try:
+            self.set_answer_elements(self._QUESTION_ELEMENT.find_element(By.CLASS_NAME, self._SAQ_CLASS_NAME))
+        except NoSuchElementException:
+            # Modern Forms: find text input (exclude hidden inputs)
+            self.set_answer_elements(self._QUESTION_ELEMENT.find_element(
+                By.CSS_SELECTOR, "input[type='text'][aria-label]"))
         return True
 
     def answer(self, text: str) -> Optional[bool]:

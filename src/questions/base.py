@@ -13,6 +13,7 @@ import logging
 from questions import AbstractQuestion, AbstractOptionQuestion
 import re
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from typing import Any, Optional, Tuple
 
@@ -38,10 +39,10 @@ class BaseQuestion(AbstractQuestion):
         _BROWSER            The selenium browser instance used to host the Google Form.
     """
 
-    # Define constants
-    _TITLE_CLASS_NAME = "freebirdFormviewerComponentsQuestionBaseTitle"  # Question Title
-    _DESCRIPTION_CLASS_NAME = "freebirdFormviewerComponentsQuestionBaseDescription"  # Question Description
-    _REQUIRED_CLASS_NAME = "freebirdFormviewerComponentsQuestionBaseRequiredAsterisk"  # Required Asterisk
+    # Define constants — use ARIA/semantic selectors for resilience against class name changes
+    _TITLE_CLASS_NAME = "freebirdFormviewerComponentsQuestionBaseTitle"  # Question Title (legacy)
+    _DESCRIPTION_CLASS_NAME = "freebirdFormviewerComponentsQuestionBaseDescription"  # Question Description (legacy)
+    _REQUIRED_CLASS_NAME = "freebirdFormviewerComponentsQuestionBaseRequiredAsterisk"  # Required Asterisk (legacy)
 
     # region Constructors
 
@@ -249,15 +250,40 @@ class BaseQuestion(AbstractQuestion):
             # Refresh the question element before retrying
             return False
 
-        # Obtain the question metadata
-        header = str(self._QUESTION_ELEMENT.find_element_by_class_name(self._TITLE_CLASS_NAME).text)
-        self.set_description(str(self._QUESTION_ELEMENT.find_element_by_class_name(self._DESCRIPTION_CLASS_NAME).text))
+        # Obtain the question metadata — try ARIA/semantic selectors first, fall back to legacy classes
         try:
-            self.set_required(bool(self._QUESTION_ELEMENT.find_element_by_class_name(self._REQUIRED_CLASS_NAME)))
+            header = str(self._QUESTION_ELEMENT.find_element(By.CLASS_NAME, self._TITLE_CLASS_NAME).text)
+        except NoSuchElementException:
+            # Modern Forms: title is inside a role="heading" element
+            try:
+                heading = self._QUESTION_ELEMENT.find_element(By.CSS_SELECTOR, "[role='heading']")
+                header = str(heading.text)
+            except NoSuchElementException:
+                _logger.error("%s could not find question title", self.__class__.__name__)
+                return False
+
+        try:
+            self.set_description(str(self._QUESTION_ELEMENT.find_element(
+                By.CLASS_NAME, self._DESCRIPTION_CLASS_NAME).text))
+        except NoSuchElementException:
+            # Modern Forms: description is often just an empty div, set to empty
+            self.set_description("")
+
+        try:
+            self.set_required(bool(self._QUESTION_ELEMENT.find_element(By.CLASS_NAME, self._REQUIRED_CLASS_NAME)))
             # Remove the ' *' that suffixes every required question header
             header = header[:len(header) - 2]
         except NoSuchElementException:
-            self.set_required(False)
+            # Modern Forms: required indicated by aria-label="Required question" or [aria-required]
+            required_els = self._QUESTION_ELEMENT.find_elements(
+                By.CSS_SELECTOR, "[aria-label='Required question'], [aria-required='true']")
+            if required_els:
+                self.set_required(True)
+                # Remove trailing " *" if present
+                if header.endswith(" *"):
+                    header = header[:-2]
+            else:
+                self.set_required(False)
         finally:
             self._set_header(header)
 
@@ -438,7 +464,8 @@ class BaseOptionGridQuestion(BaseOptionQuestion):
     # Define constants
     _DELIMITER = ", response for "
     _REGEX = "^([\\w|\\s]+)(, response for )([\\w|\\s]+)$"
-    _CONTAINER = "freebirdFormviewerComponentsQuestionGridScrollContainer"  # To obtain options from
+    _CONTAINER = "freebirdFormviewerComponentsQuestionGridScrollContainer"  # To obtain options from (legacy)
+    _CONTAINER_FALLBACK_CSS = "div[role='group'], div[class*='ScrollContainer']"  # Modern fallback
 
     # region Getter methods
 

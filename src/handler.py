@@ -25,6 +25,7 @@ import logging
 import os
 import random
 import re
+import warnings
 from telegram import (
     CallbackQuery,
     InlineKeyboardButton,
@@ -186,6 +187,9 @@ _anti_garbage_replies = (
 
 # Telegram markup to return to main menu
 _RETURN_CALLBACK_DATA = "RETURN"
+_CONVERSATIONHANDLER_CALLBACK_WARNING = (
+    r"If 'per_message=False', 'CallbackQueryHandler' will not be tracked for every message\."
+)
 
 # endregion Define constants
 
@@ -246,6 +250,24 @@ def _clear_cache(context: CallbackContext, keep_save_pref: Optional[bool] = True
     # Restore global save preference
     if save_pref:
         context.user_data[_SAVE_PREFS] = {_GLOBAL_SAVE_PREF: save_pref}
+
+
+def _create_conversation_handler(*args: Any, **kwargs: Any) -> ConversationHandler:
+    """Build a ConversationHandler without surfacing PTB's mixed callback/message warning.
+
+    This bot intentionally mixes CallbackQueryHandler and MessageHandler states, so
+    per_message must stay False. PTB warns about that generic pattern even though this
+    bot only tracks one active conversation flow per user/chat.
+    """
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=_CONVERSATIONHANDLER_CALLBACK_WARNING,
+            category=UserWarning,
+            module=r"telegram\.ext\.conversationhandler",
+        )
+        return ConversationHandler(*args, **kwargs)
 
 # endregion Helper functions
 
@@ -2117,7 +2139,7 @@ def _error_handler(update: Update, context: CallbackContext) -> None:
         )
 
     # Send generic bug message to user
-    if update.message or update.callback_query.message:
+    if update and (update.message or (update.callback_query and update.callback_query.message)):
         utils.send_bug_message(update.message if update.message else update.callback_query.message)
 
 # endregion Handling unrecognised input
@@ -2141,7 +2163,7 @@ def main() -> None:
 
     global answer_handler
     global confirm_handler
-    submit_conv_handler = ConversationHandler(
+    submit_conv_handler = _create_conversation_handler(
         entry_points=[
             CallbackQueryHandler(_obtain_question, pattern="^" + _OBTAIN_QUESTION + "$"),
             answer_handler,
@@ -2169,7 +2191,7 @@ def main() -> None:
 
     # region Set up second level ConversationHandler (reminder menu)
 
-    remind_conv_handler = ConversationHandler(
+    remind_conv_handler = _create_conversation_handler(
         entry_points=[CallbackQueryHandler(_remind_menu, pattern="^" + _SET_REMINDER + "$")],
         states={
             _SELECTING_ACTION: [
@@ -2203,7 +2225,7 @@ def main() -> None:
 
     # region Set up second level ConversationHandler (preference menu)
 
-    pref_conv_handler = ConversationHandler(
+    pref_conv_handler = _create_conversation_handler(
         entry_points=[CallbackQueryHandler(_pref_menu, pattern="^" + _SET_PREFERENCE + "$")],
         states={
             _SELECTING_ACTION: [
@@ -2236,7 +2258,7 @@ def main() -> None:
         CallbackQueryHandler(_reset, pattern="^" + _RESET + "$")
     ]
 
-    conv_handler = ConversationHandler(
+    conv_handler = _create_conversation_handler(
         entry_points=[
             CommandHandler("start", _start),
             CallbackQueryHandler(_main_menu, pattern="^" + _RETURN_CALLBACK_DATA + "$")
@@ -2265,15 +2287,30 @@ def main() -> None:
 
     # Start the Bot
     _logger.info("The bot has been successfully deployed!")
-    # updater.start_polling()  # Uncomment this line for local testing only
-    updater.start_webhook(listen="0.0.0.0",
-                          port=int(os.environ.get("PORT", "8443")),
-                          url_path=token,
-                          webhook_url="https://autogformbot.herokuapp.com/" + token)
+    _start_updater(updater, token)
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT, SIGTERM or SIGABRT.
     # This should be used most of the time, since start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
+
+
+def _start_updater(updater: Updater, token: str) -> None:
+    """Starts the Telegram updater in webhook or polling mode.
+
+    When WEBHOOK_URL is configured, the bot starts a webhook server.
+    Otherwise it defaults to polling, which is the expected local-development mode.
+    """
+
+    webhook_url = os.environ.get("WEBHOOK_URL", "").strip()
+    if webhook_url:
+        updater.start_webhook(
+            listen="0.0.0.0",
+            port=int(os.environ.get("PORT", "8443")),
+            url_path=token,
+            webhook_url=webhook_url.rstrip("/") + "/" + token
+        )
+    else:
+        updater.start_polling()
 
 
 if __name__ == '__main__':

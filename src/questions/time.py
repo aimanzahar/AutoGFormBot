@@ -12,6 +12,7 @@ Usage:
 from browser import Browser
 import logging
 from questions import BaseQuestion
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from typing import Optional, Tuple
 
@@ -96,10 +97,10 @@ class TimeQuestion(BaseQuestion):
             return result
 
         # Obtain the input fields
-        hour_elements = self._QUESTION_ELEMENT.find_elements_by_xpath(
-            ".//input[@aria-label='{}']".format(self._TIME_HOUR_ARIA_LABEL))
-        minute_elements = self._QUESTION_ELEMENT.find_elements_by_xpath(
-            ".//input[@aria-label='{}']".format(self._TIME_MINUTE_ARIA_LABEL))
+        hour_elements = self._QUESTION_ELEMENT.find_elements(
+            By.XPATH, ".//input[@aria-label='{}']".format(self._TIME_HOUR_ARIA_LABEL))
+        minute_elements = self._QUESTION_ELEMENT.find_elements(
+            By.XPATH, ".//input[@aria-label='{}']".format(self._TIME_MINUTE_ARIA_LABEL))
 
         # Sanity check
         if len(hour_elements) == 0 or len(minute_elements) == 0:

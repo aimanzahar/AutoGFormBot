@@ -14,6 +14,7 @@ from datetime import datetime
 import logging
 from questions import BaseQuestion
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from typing import Optional, Tuple, Union
 
@@ -101,12 +102,12 @@ class DateQuestion(BaseQuestion):
             return result
 
         # Obtain the input field(s)
-        date_picker_elements = self._QUESTION_ELEMENT.find_elements_by_xpath(
-            ".//input[contains(@type, '{}')]".format(self._DATE_TYPE))
-        month_elements = self._QUESTION_ELEMENT.find_elements_by_xpath(
-            ".//input[contains(@aria-label, '{}')]".format(self._MONTH_ARIA_LABEL))
-        day_elements = self._QUESTION_ELEMENT.find_elements_by_xpath(
-            ".//input[contains(@aria-label, '{}')]".format(self._DAY_ARIA_LABEL))
+        date_picker_elements = self._QUESTION_ELEMENT.find_elements(
+            By.XPATH, ".//input[contains(@type, '{}')]".format(self._DATE_TYPE))
+        month_elements = self._QUESTION_ELEMENT.find_elements(
+            By.XPATH, ".//input[contains(@aria-label, '{}')]".format(self._MONTH_ARIA_LABEL))
+        day_elements = self._QUESTION_ELEMENT.find_elements(
+            By.XPATH, ".//input[contains(@aria-label, '{}')]".format(self._DAY_ARIA_LABEL))
 
         # If date picker element found, set this as answer element
         if date_picker_elements:
